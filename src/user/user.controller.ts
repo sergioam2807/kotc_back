@@ -1,0 +1,17 @@
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { UserService } from './user.service';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+
+@Controller('users')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  async getAllUsers() {
+    const users = await this.userService.getAll();
+    if (!users || users.length === 0) {
+        return { message: 'No users found', users: [] };
+    }
+    return users;
+  }
+}

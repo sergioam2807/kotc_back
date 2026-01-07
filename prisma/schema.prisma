@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  auth0Id    String   @unique
+  email      String   @unique
+  name       String?
+  picture    String? 
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastLogin  DateTime?
+
+  ownedTeams Team[]        @relation("TeamOwner")
+  playerTeams PlayerTeam[]
+}
+
+model Team {
+  id              Int           @id @default(autoincrement())
+  name            String
+  logoUrl         String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Owner del equipo
+  ownerId         Int
+  owner           User          @relation("TeamOwner", fields: [ownerId], references: [id])
+
+  // Relación con jugadores
+  players         PlayerTeam[]
+
+  // Información deportiva
+  lastGame        DateTime?
+  preferredCourt  String?
+  isKotc          Boolean       @default(false)
+  homeCourt       String?
+
+  // Métricas
+  wins            Int           @default(0)
+  losses          Int           @default(0)
+  draws           Int           @default(0)
+  points          Int           @default(0)
+
+  // Info opcional pero muy útil
+  description     String?
+  colorPrimary    String?
+  colorSecondary  String?
+  coverImageUrl   String?
+
+  // Invitaciones enviadas
+  invitations     Invitation[]
+
+  //Ubicacion
+  region          String?
+  city            String?
+}
+
+model PlayerTeam {
+  id          Int       @id @default(autoincrement())
+
+  userId      Int
+  teamId      Int
+  season      Int       // Ej: 2024, 2025...
+  joinedAt    DateTime  @default(now())
+  leftAt      DateTime?
+
+  user        User      @relation(fields: [userId], references: [id])
+  team        Team      @relation(fields: [teamId], references: [id])
+
+  @@unique([userId, season]) // 1 jugador = 1 equipo por temporada
+}
+
+model Invitation {
+  id        Int       @id @default(autoincrement())
+  email     String
+  teamId    Int
+  sentAt    DateTime  @default(now())
+  accepted  Boolean   @default(false)
+  token     String    @unique
+
+  team      Team      @relation(fields: [teamId], references: [id])
+}
+
