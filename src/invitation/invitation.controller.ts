@@ -44,4 +44,8 @@ export class InvitationController {
   remove(@Param('id') id: string) {
     return this.invitationService.remove(Number(id));
   }
+  @Patch('accept-by-token/:token')
+  acceptByToken(@Param('token') token: string, @Body() body: any) {
+    return this.invitationService.acceptByToken(token, body);
+  }
 }
