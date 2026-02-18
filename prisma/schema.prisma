@@ -13,83 +13,134 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id         Int      @id @default(autoincrement())
-  auth0Id    String   @unique
-  email      String   @unique
-  name       String?
-  picture    String? 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  lastLogin  DateTime?
+enum RatingTargetType {
+  field
+  team
+  player
+}
 
-  ownedTeams Team[]        @relation("TeamOwner")
+model User {
+  id        Int       @id @default(autoincrement())
+  auth0Id   String    @unique
+  email     String    @unique
+  name      String?
+  picture   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  lastLogin DateTime?
+
+  ownedTeams  Team[]       @relation("TeamOwner")
   playerTeams PlayerTeam[]
+  ratings     Rating[]
 }
 
 model Team {
-  id              Int           @id @default(autoincrement())
-  name            String
-  logoUrl         String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id        Int      @id @default(autoincrement())
+  name      String
+  logoUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Owner del equipo
-  ownerId         Int
-  owner           User          @relation("TeamOwner", fields: [ownerId], references: [id])
+  ownerId Int
+  owner   User @relation("TeamOwner", fields: [ownerId], references: [id])
 
   // Relación con jugadores
-  players         PlayerTeam[]
+  players PlayerTeam[]
 
   // Información deportiva
-  lastGame        DateTime?
-  preferredCourt  String?
-  isKotc          Boolean       @default(false)
-  homeCourt       String?
+  lastGame         DateTime?
+  preferredFieldId Int?
+  preferredField   Field?    @relation("PreferredField", fields: [preferredFieldId], references: [id])
+  isKotc           Boolean   @default(false)
+  homeFieldId      Int?
+  homeField        Field?    @relation("HomeField", fields: [homeFieldId], references: [id])
 
   // Métricas
-  wins            Int           @default(0)
-  losses          Int           @default(0)
-  draws           Int           @default(0)
-  points          Int           @default(0)
+  wins   Int @default(0)
+  losses Int @default(0)
+  draws  Int @default(0)
+  points Int @default(0)
 
   // Info opcional pero muy útil
-  description     String?
-  colorPrimary    String?
-  colorSecondary  String?
-  coverImageUrl   String?
+  description    String?
+  colorPrimary   String?
+  colorSecondary String?
+  coverImageUrl  String?
 
   // Invitaciones enviadas
-  invitations     Invitation[]
+  invitations Invitation[]
 
   //Ubicacion
-  region          String?
-  city            String?
+  region String?
+  city   String?
 }
 
 model PlayerTeam {
-  id          Int       @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  userId      Int
-  teamId      Int
-  season      Int       // Ej: 2024, 2025...
-  joinedAt    DateTime  @default(now())
-  leftAt      DateTime?
+  userId   Int
+  teamId   Int
+  season   Int // Ej: 2024, 2025...
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
 
-  user        User      @relation(fields: [userId], references: [id])
-  team        Team      @relation(fields: [teamId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
 
   @@unique([userId, season]) // 1 jugador = 1 equipo por temporada
 }
 
 model Invitation {
-  id        Int       @id @default(autoincrement())
-  email     String
-  teamId    Int
-  sentAt    DateTime  @default(now())
-  accepted  Boolean   @default(false)
-  token     String    @unique
+  id       Int      @id @default(autoincrement())
+  email    String
+  teamId   Int
+  sentAt   DateTime @default(now())
+  accepted Boolean  @default(false)
+  token    String   @unique
 
-  team      Team      @relation(fields: [teamId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
 }
 
+model Region {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  comunas Comuna[]
+}
+
+model Comuna {
+  id       Int     @id @default(autoincrement())
+  name     String
+  regionId Int
+  region   Region  @relation(fields: [regionId], references: [id])
+  fields   Field[]
+}
+
+model Field {
+  id        Int      @id @default(autoincrement())
+  name      String
+  latitude  Float
+  longitude Float
+  photoUrl  String?
+  comments  String[]
+  comunaId  Int?
+  comuna    Comuna?  @relation(fields: [comunaId], references: [id])
+  isPaid    Boolean
+  price     Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teamsHome Team[] @relation("HomeField")
+  teamsPref Team[] @relation("PreferredField")
+}
+
+model Rating {
+  id         Int      @id @default(autoincrement())
+  value      Int // 1 a 5
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  targetType RatingTargetType
+  targetId   Int // id del objeto valorado
+  comment    String?
+  createdAt  DateTime @default(now())
+}
