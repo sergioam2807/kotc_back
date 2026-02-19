@@ -7,5 +7,7 @@ export class CreateFieldDto {
   comments?: string[];
   isPaid: boolean;
   price?: number;
-  comunaId: number; 
+  comunaId: number;
+  userId?: number; // usuario que crea la cancha
+  teamId?: number; // equipo del usuario (opcional)
 }

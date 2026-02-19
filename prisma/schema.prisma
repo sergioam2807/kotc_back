@@ -19,20 +19,7 @@ enum RatingTargetType {
   player
 }
 
-model User {
-  id        Int       @id @default(autoincrement())
-  auth0Id   String    @unique
-  email     String    @unique
-  name      String?
-  picture   String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  lastLogin DateTime?
-
-  ownedTeams  Team[]       @relation("TeamOwner")
-  playerTeams PlayerTeam[]
-  ratings     Rating[]
-}
+// ...existing code...
 
 model Team {
   id        Int      @id @default(autoincrement())
@@ -74,6 +61,8 @@ model Team {
   //Ubicacion
   region String?
   city   String?
+
+  kings KingOfTheCourt[] @relation("TeamKing")
 }
 
 model PlayerTeam {
@@ -105,17 +94,36 @@ model Invitation {
 model Region {
   id      Int      @id @default(autoincrement())
   name    String   @unique
+  latitude  Float?
+  longitude Float?
   comunas Comuna[]
 }
 
 model Comuna {
   id       Int     @id @default(autoincrement())
   name     String
+  latitude  Float?
+  longitude Float?
   regionId Int
   region   Region  @relation(fields: [regionId], references: [id])
   fields   Field[]
 }
 
+model User {
+  id        Int       @id @default(autoincrement())
+  auth0Id   String    @unique
+  email     String    @unique
+  name      String?
+  picture   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  lastLogin DateTime?
+
+  ownedTeams  Team[]       @relation("TeamOwner")
+  playerTeams PlayerTeam[]
+  ratings     Rating[]
+  kings       KingOfTheCourt[] @relation("UserKing")
+}
 model Field {
   id        Int      @id @default(autoincrement())
   name      String
@@ -132,7 +140,10 @@ model Field {
 
   teamsHome Team[] @relation("HomeField")
   teamsPref Team[] @relation("PreferredField")
+  kings     KingOfTheCourt[]
 }
+
+
 
 model Rating {
   id         Int      @id @default(autoincrement())
@@ -143,4 +154,21 @@ model Rating {
   targetId   Int // id del objeto valorado
   comment    String?
   createdAt  DateTime @default(now())
+}
+
+// King of the Court por modalidad y cancha
+model KingOfTheCourt {
+  id         Int      @id @default(autoincrement())
+  fieldId    Int
+  modality   String   // Ej: "5v5", "3v3", "2v2", "1v1"
+  teamId     Int?     // Si es king por equipo
+  userId     Int?     // Si es king individual
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  field      Field    @relation(fields: [fieldId], references: [id])
+  team       Team?    @relation("TeamKing", fields: [teamId], references: [id])
+  user       User?    @relation("UserKing", fields: [userId], references: [id])
+
+  @@unique([fieldId, modality]) // Solo un king por modalidad/cancha
 }

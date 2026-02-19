@@ -7,14 +7,21 @@ export class FieldController {
   constructor(private readonly fieldService: FieldService) {}
 
   @Get()
-  findAll(@Query('lat') lat?: number, @Query('lng') lng?: number) {
-    // Si se pasan coordenadas, podrías filtrar por cercanía
-    return this.fieldService.findAll(lat, lng);
+  findAll(
+    @Query('lat') lat?: number,
+    @Query('lng') lng?: number,
+    @Query('modality') modality?: string
+  ) {
+    // Si se pasan coordenadas, podrías filtrar por cercanía y modalidad
+    return this.fieldService.findAll(lat, lng, modality);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.fieldService.findOne(+id);
+  findOne(
+    @Param('id') id: string,
+    @Query('modality') modality?: string
+  ) {
+    return this.fieldService.findOne(+id, modality);
   }
 
   @Post()

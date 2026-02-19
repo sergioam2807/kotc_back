@@ -13,6 +13,7 @@ import { PlayerTeamModule } from './player-team/player-team.module';
 import { InvitationModule } from './invitation/invitation.module';
 import { FieldModule } from './field/field.module';
 import { RatingModule } from './rating/rating.module';
+import { RegionModule } from './region/region.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { RatingModule } from './rating/rating.module';
     InvitationModule,
     FieldModule,
     RatingModule,
+    RegionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
