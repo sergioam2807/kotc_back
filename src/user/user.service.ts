@@ -42,6 +42,22 @@ export class UserService {
     }
     
     async getByEmail(email: string) {
-      return this.prisma.user.findUnique({ where: { email } });
+      return this.prisma.user.findUnique({
+        where: { email },
+        include: {
+          ownedTeams: true, // equipos donde es owner
+          kings: {
+            include: {
+              field: true,
+              team: true
+            }
+          },
+          playerTeams: {
+            include: {
+              team: true
+            }
+          }
+        }
+      });
     }
 }
