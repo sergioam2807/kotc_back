@@ -121,6 +121,11 @@ export class FieldService {
           teamId
         }
       });
+      // Actualizar preferredFieldId del equipo
+      await this.prisma.team.update({
+        where: { id: teamId },
+        data: { preferredFieldId: field.id }
+      });
     }
     return field;
   }

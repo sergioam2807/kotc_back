@@ -63,6 +63,11 @@ model Team {
   city   String?
 
   kings KingOfTheCourt[] @relation("TeamKing")
+
+  gamesA Game[] @relation("GameTeamA")
+  gamesB Game[] @relation("GameTeamB")
+  gameStats GameStat[]
+  teamStat TeamStat?
 }
 
 model PlayerTeam {
@@ -123,7 +128,13 @@ model User {
   playerTeams PlayerTeam[]
   ratings     Rating[]
   kings       KingOfTheCourt[] @relation("UserKing")
+
+  gamesA Game[] @relation("GamePlayerA")
+  gamesB Game[] @relation("GamePlayerB")
+  gameStats GameStat[]
+  playerStat PlayerStat?
 }
+
 model Field {
   id        Int      @id @default(autoincrement())
   name      String
@@ -141,9 +152,70 @@ model Field {
   teamsHome Team[] @relation("HomeField")
   teamsPref Team[] @relation("PreferredField")
   kings     KingOfTheCourt[]
+
+  games Game[]
 }
 
+// Partido
+model Game {
+  id         Int      @id @default(autoincrement())
+  date       DateTime @default(now())
+  modality   String   // 1v1, 2v2, 3v3, 5v5
+  fieldId    Int
+  field      Field    @relation(fields: [fieldId], references: [id])
+  teamAId    Int?
+  teamA      Team?    @relation("GameTeamA", fields: [teamAId], references: [id])
+  teamBId    Int?
+  teamB      Team?    @relation("GameTeamB", fields: [teamBId], references: [id])
+  playerAId  Int?
+  playerA    User?    @relation("GamePlayerA", fields: [playerAId], references: [id])
+  playerBId  Int?
+  playerB    User?    @relation("GamePlayerB", fields: [playerBId], references: [id])
+  scoreA     Int
+  scoreB     Int
+  stats      GameStat[]
+}
 
+// Estadísticas por partido
+model GameStat {
+  id       Int    @id @default(autoincrement())
+  gameId   Int
+  game     Game   @relation(fields: [gameId], references: [id])
+  userId   Int?
+  user     User?  @relation(fields: [userId], references: [id])
+  teamId   Int?
+  team     Team?  @relation(fields: [teamId], references: [id])
+  points   Int    // Puntos anotados
+  assists  Int    // Asistencias
+  rebounds Int    // Rebotes
+  steals   Int    // Robos
+  blocks   Int    // Bloqueos
+  fouls    Int    // Faltas
+  minutes  Int    // Minutos jugados
+}
+
+// Estadísticas acumuladas por equipo
+model TeamStat {
+  id      Int   @id @default(autoincrement())
+  teamId  Int   @unique
+  team    Team  @relation(fields: [teamId], references: [id])
+  pointsPerGame Float
+  defensiveRating Float
+  chemistry      Float
+  globalRanking  Int
+  rankingChange  Int
+}
+
+// Estadísticas acumuladas por usuario
+model PlayerStat {
+  id      Int   @id @default(autoincrement())
+  userId  Int   @unique
+  user    User  @relation(fields: [userId], references: [id])
+  pointsPerGame Float
+  defensiveRating Float
+  globalRanking  Int
+  rankingChange  Int
+}
 
 model Rating {
   id         Int      @id @default(autoincrement())
@@ -172,3 +244,4 @@ model KingOfTheCourt {
 
   @@unique([fieldId, modality]) // Solo un king por modalidad/cancha
 }
+
